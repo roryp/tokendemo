@@ -6,7 +6,7 @@ Live demo: [http://aka.ms/costs](http://aka.ms/costs) · Repo: [https://github.c
 
 ![Token Efficiency dashboard](instant-models-dashboard.png){ width=6.5in }
 
-*Three live workflows on one screen — a zero-deployment instant model call, a prompt-cache warm/repeat comparison, and a compaction pass. Every number is priced against live Azure Retail Prices meters, not a hardcoded table. (Figures shown are representative; live values vary by prompt, region, quota, and pricing response.)*
+*Four live workflows on one screen — a zero-deployment instant model call, a prompt-cache warm/repeat comparison, a compaction pass, and a caveman-speak output-compression pass. Every number is priced against live Azure Retail Prices meters, not a hardcoded table. (Figures shown are representative; live values vary by prompt, region, quota, and pricing response.)*
 
 ## Why this exists
 
@@ -22,11 +22,11 @@ What makes it worth a look:
 
 ## Architecture
 
-Java 21, Spring Boot, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. Three POST endpoints; one service fanning out to Foundry and the pricing API.
+Java 21, Spring Boot, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. Four POST endpoints; one service fanning out to Foundry and the pricing API.
 
 ```text
 Browser (static dashboard)
-   │  POST /api/instant · /api/cache-demo · /api/compact-demo
+   │  POST /api/instant · /api/cache-demo · /api/compact-demo · /api/caveman-demo
    ▼
 @RestController ──▶ DemoRunService
    │ Azure AI Agents SDK        │ java.net.http + OData
@@ -119,6 +119,21 @@ long reclaimed = tokensSaved(usage.inputTokens(), usage.outputTokens());
 
 **Why the instruction-prompt version, not the native one?** The Responses API now ships *native* context management — `truncation: "auto"` to drop the oldest items past the context window, a `context_management` option with a `compact_threshold` for server-side compaction mid-stream, and a standalone `/responses/compact` endpoint. But those return an **opaque, encrypted compaction item** built for the model to consume on the next turn, not for a human to read. You cannot put it on a dashboard, diff it, or show the token delta line by line. For a *teaching* tool whose whole job is to make the tradeoff visible, an instruction prompt that produces legible before/after text and an auditable savings number is the right call. In **production**, the native primitives are usually better — cheaper to wire up and tuned for the model, not for display.
 
+## 5. Caveman speak — compressing the output, not the meaning
+
+Compaction shrinks the *input* you carry forward; the fourth demo attacks the *output* you pay to generate. Inspired by the [caveman](https://github.com/JuliusBrussee/caveman) skill — *"why use many token when few do trick"* — it answers the same question twice, once normally and once under a system instruction to drop filler and speak in terse fragments while keeping every technical fact, code block, and command exact:
+
+```java
+CallSummary normal  = summarize("Normal answer",  createAnswer(prompt, CAVEMAN_NORMAL_INSTRUCTIONS), pricing);
+CallSummary caveman = summarize("Caveman answer", createAnswer(prompt, CAVEMAN_INSTRUCTIONS), pricing);
+```
+
+![Caveman speak demo: a normal answer compressed to terse fragments with the same facts](caveman-results.png){ width=6.2in }
+
+*Representative deployed run: a React re-render explanation dropped from 469 output tokens to 327 (≈30% fewer, 1.4× smaller), keeping the fix (`useMemo`, `useCallback`) and code exact — about USD 0.0043 saved per answer at USD 30 / 1M output. Only output tokens shrink; the question is unchanged.*
+
+Because output bills at the highest rate — USD 30 / 1M versus USD 5 / 1M input for `5.5 ShortCo` — trimming verbose answers is often the cheapest win. The caveman style guide costs a little fixed input per call, but in production it lives once in a system prompt (and can be prompt-cached), so the output savings compound across a conversation. Brain still big, mouth small.
+
 ## The cost model
 
 The three token classes bill at different rates, so the estimate keeps them separate and matches each to its discovered meter:
@@ -148,6 +163,7 @@ azd up
 - Keep `promptCacheKey` stable — churn it and the benefit evaporates.
 - Treat compaction as break-even math: reclaimed tokens per future turn vs the one-time cost.
 - Budget output tokens like input tokens; at USD 30 / 1M, output dominated the instant call's cost.
+- Compress the *answer*, not just the prompt — terse "caveman" output can cut output tokens ~40–65% while keeping code and facts exact.
 - Price against live meters with region, scope, and timestamp visible.
 
 ## Try it

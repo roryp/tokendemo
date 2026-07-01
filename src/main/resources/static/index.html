@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Token Efficiency</title>
-    <link rel="stylesheet" href="/styles.css?v=20260608-heat-v3">
+    <link rel="stylesheet" href="/styles.css?v=20260701-caveman-v1">
 </head>
 <body>
     <main class="shell">
@@ -20,7 +20,7 @@
                     </a>
                 </div>
                 <h1 id="page-title">Token Efficiency</h1>
-                <p class="lede">Run an instant model call, compare prompt cache reuse, then compact long working notes into a smaller reusable prompt.</p>
+                <p class="lede">Run an instant model call, compare prompt cache reuse, compact long working notes into a smaller reusable prompt, then watch caveman-speak trim a verbose answer while keeping every fact.</p>
             </div>
             <dl class="config-strip" id="configStrip" aria-label="Runtime configuration">
                 <div><dt>Model</dt><dd id="modelValue">Loading</dd></div>
@@ -77,8 +77,23 @@ Open question: after the docs update, add a dashboard example that compacts long
                 <button id="compactButton" class="action action-tertiary" type="button">Compact prompt</button>
                 <div id="compactResult" class="result empty">Ready to compact working notes.</div>
             </article>
+
+            <article class="panel caveman-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Output compression</p>
+                        <h2>Caveman Speak Demo</h2>
+                    </div>
+                    <span class="chip">2 calls</span>
+                </div>
+                <p class="panel-copy">Inspired by <a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">JuliusBrussee/caveman</a> &mdash; <em>&ldquo;why use many token when few do trick.&rdquo;</em> The same question is answered twice: once in normal prose, once in caveman-speak that drops filler and keeps every technical fact, code snippet, and command exact. Output tokens are the priciest kind, so watch them collapse while the answer stays correct. Brain still big, mouth small.</p>
+                <label for="cavemanPromptBox">Question</label>
+                <textarea id="cavemanPromptBox" rows="3">Why does passing an inline object or arrow function as a prop cause a React child component to re-render on every parent render, and how do I prevent it?</textarea>
+                <button id="cavemanButton" class="action action-caveman" type="button">Answer normal &amp; caveman</button>
+                <div id="cavemanResult" class="result empty">Ready to grunt.</div>
+            </article>
         </section>
     </main>
-    <script src="/app.js?v=20260608-heat-v3"></script>
+    <script src="/app.js?v=20260701-caveman-v1"></script>
 </body>
 </html>

@@ -1,11 +1,14 @@
 const instantButton = document.querySelector('#instantButton');
 const cacheButton = document.querySelector('#cacheButton');
 const compactButton = document.querySelector('#compactButton');
+const cavemanButton = document.querySelector('#cavemanButton');
 const promptBox = document.querySelector('#promptBox');
 const compactPromptBox = document.querySelector('#compactPromptBox');
+const cavemanPromptBox = document.querySelector('#cavemanPromptBox');
 const instantResult = document.querySelector('#instantResult');
 const cacheResult = document.querySelector('#cacheResult');
 const compactResult = document.querySelector('#compactResult');
+const cavemanResult = document.querySelector('#cavemanResult');
 
 const formatPercent = (value) => `${Number(value).toFixed(2)}%`;
 const formatInteger = (value) => new Intl.NumberFormat().format(Number(value ?? 0));
@@ -474,6 +477,76 @@ function renderCompaction(data) {
     `;
 }
 
+function renderCaveman(data) {
+    const caveman = data.caveman || {};
+    const normalCost = data.normalCost || {};
+    const cavemanCost = data.cavemanCost || {};
+    const pricing = data.pricing || {};
+    const currency = pricing.currencyCode || normalCost.currencyCode || 'USD';
+
+    const normalTokens = Number(caveman.normalOutputTokens) || 0;
+    const cavemanTokens = Number(caveman.cavemanOutputTokens) || 0;
+    const tokensSaved = Number(caveman.tokensSaved) || 0;
+    const reductionRate = Number(caveman.tokenReductionRate) || 0;
+    const keptPercent = normalTokens > 0 ? Math.max(0, Math.min(100, (cavemanTokens / normalTokens) * 100)) : 0;
+    const freedPercent = Math.max(0, 100 - keptPercent);
+    const ratio = cavemanTokens > 0 ? normalTokens / cavemanTokens : 0;
+    const ratioLabel = ratio >= 1.05 ? `${ratio.toFixed(1)}\u00d7 fewer words` : 'about the same size';
+
+    const normalOutputCost = Number(normalCost.output) || 0;
+    const cavemanOutputCost = Number(cavemanCost.output) || 0;
+    const outputSaved = Number(data.outputCostSaved) || Math.max(0, normalOutputCost - cavemanOutputCost);
+
+    cavemanResult.className = 'result';
+    cavemanResult.innerHTML = `
+        <div class="compaction-headline caveman-headline">
+            <div class="headline-figure">
+                <strong>${Math.round(reductionRate)}%</strong>
+                <span>fewer output tokens</span>
+            </div>
+            <div class="headline-meta">
+                <span class="headline-ratio">${ratioLabel}</span>
+                <span class="headline-saved">${formatInteger(tokensSaved)} output tokens dropped &mdash; same technical answer</span>
+            </div>
+        </div>
+        <div class="budget" aria-label="Of ${formatInteger(normalTokens)} normal output tokens, ${formatInteger(cavemanTokens)} kept and ${formatInteger(tokensSaved)} saved by caveman speak">
+            <div class="budget-track">
+                <div class="budget-kept" style="width: ${keptPercent}%"><span>${formatInteger(cavemanTokens)} caveman</span></div>
+                <div class="budget-freed budget-freed-caveman" style="width: ${freedPercent}%"><span>${formatInteger(tokensSaved)} saved</span></div>
+            </div>
+            <div class="budget-legend">
+                <span class="legend-item"><span class="swatch kept"></span>Caveman output kept</span>
+                <span class="legend-item"><span class="swatch caveman"></span>Filler words dropped</span>
+            </div>
+        </div>
+        <div class="caveman-columns">
+            <div class="text-col text-before">
+                <div class="text-col-head">
+                    <span class="text-col-label">Before &middot; normal answer</span>
+                    <span class="text-col-count">${formatInteger(normalTokens)} output tokens</span>
+                </div>
+                <div class="text-body" style="max-height: 260px">${escapeHtml(data.normalResponse)}</div>
+            </div>
+            <div class="text-col text-after">
+                <div class="text-col-head">
+                    <span class="text-col-label">After &middot; caveman speak</span>
+                    <span class="text-col-count">${formatInteger(cavemanTokens)} output tokens</span>
+                </div>
+                <div class="text-body" style="max-height: 260px">${escapeHtml(data.cavemanResponse)}</div>
+            </div>
+        </div>
+        <div class="cache-savings">
+            <span class="cache-savings-label">Saved on output</span>
+            <span class="cache-savings-value">${formatMoney(outputSaved, currency)}<em>per answer</em></span>
+            <span class="cache-savings-value">${formatMoney(outputSaved * 1000, currency)}<em>per 1,000 answers</em></span>
+            <span class="cache-savings-value">${formatMoney(outputSaved * 1000000, currency)}<em>per 1M answers</em></span>
+        </div>
+        <p class="fine-print">Output cost: normal ${formatMoney(normalOutputCost, currency)} &rarr; caveman ${formatMoney(cavemanOutputCost, currency)} at ${escapeHtml(pricing.outputRate)}. Output tokens are the priciest kind, so trimming them is where the savings land.</p>
+        <p class="fine-print">Normal call: input ${formatInteger(data.normalUsage.inputTokens)} &middot; output ${formatInteger(data.normalUsage.outputTokens)} &middot; total ${formatInteger(data.normalUsage.totalTokens)} tokens. Caveman call: input ${formatInteger(data.cavemanUsage.inputTokens)} &middot; output ${formatInteger(data.cavemanUsage.outputTokens)} &middot; total ${formatInteger(data.cavemanUsage.totalTokens)} tokens.</p>
+        <p class="fine-print">The same question is asked both times; caveman compresses only the answer. Output tokens are the priciest kind and drop the most, while code, commands, and identifiers stay exact. The caveman style guide adds a little fixed input, but in real use it lives once in the system prompt and can be cached. Inspired by <a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">JuliusBrussee/caveman</a>.</p>
+    `;
+}
+
 function showError(target, error) {
     target.className = 'result error';
     target.textContent = error.message;
@@ -523,6 +596,19 @@ compactButton.addEventListener('click', async () => {
         showError(compactResult, error);
     } finally {
         compactButton.disabled = false;
+    }
+});
+
+cavemanButton.addEventListener('click', async () => {
+    cavemanButton.disabled = true;
+    cavemanResult.className = 'result empty';
+    cavemanResult.textContent = 'Asking normally, then like a caveman...';
+    try {
+        renderCaveman(await postJson('/api/caveman-demo', { prompt: cavemanPromptBox.value }));
+    } catch (error) {
+        showError(cavemanResult, error);
+    } finally {
+        cavemanButton.disabled = false;
     }
 });
 

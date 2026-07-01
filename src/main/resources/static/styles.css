@@ -12,6 +12,7 @@
     --green: #05845e;
     --rose: #d14d72;
     --violet: #6754d9;
+    --clay: #c05a2e;
     /* Price-intensity scale: a token type's color encodes its $/token rate, so
        cheap reads cool and expensive reads hot, independent of token count. */
     --tok-cheap: #0e9aa7;
@@ -135,6 +136,7 @@ dd { margin: 5px 0 0; overflow-wrap: anywhere; font-weight: 800; }
 .instant-panel { border-top: 8px solid var(--blue); }
 .cache-panel { border-top: 8px solid var(--rose); }
 .compact-panel { border-top: 8px solid var(--violet); }
+.caveman-panel { border-top: 8px solid var(--clay); grid-column: 1 / -1; }
 
 .panel-heading {
     display: flex;
@@ -192,6 +194,7 @@ textarea {
 .action-primary { background: #1f7aff; }
 .action-secondary { background: #d14d72; }
 .action-tertiary { background: #6754d9; }
+.action-caveman { background: var(--clay); }
 .action:disabled { cursor: progress; opacity: 0.65; }
 
 .result {
@@ -1075,6 +1078,28 @@ textarea {
     line-height: 1.5;
 }
 
+.caveman-headline {
+    border-color: rgba(192, 90, 46, 0.28);
+    background: linear-gradient(120deg, rgba(192, 90, 46, 0.14), rgba(224, 138, 30, 0.12));
+}
+
+.caveman-headline .headline-figure strong { color: var(--clay); }
+
+.budget-freed-caveman {
+    background: repeating-linear-gradient(45deg,
+        rgba(192, 90, 46, 0.88), rgba(192, 90, 46, 0.88) 8px,
+        rgba(192, 90, 46, 0.62) 8px, rgba(192, 90, 46, 0.62) 16px);
+}
+
+.legend-item .swatch.caveman { background: var(--clay); }
+
+.caveman-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0 0 14px;
+}
+
 .fine-print {
     color: var(--muted);
     font-size: 0.83rem;
@@ -1098,6 +1123,7 @@ textarea {
 @media (max-width: 900px) {
     .intro, .workspace { grid-template-columns: 1fr; }
     .config-strip { grid-template-columns: 1fr; }
+    .caveman-columns { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 560px) {

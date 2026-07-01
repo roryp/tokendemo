@@ -6,11 +6,12 @@
 
 **Live app:** [http://aka.ms/costs](http://aka.ms/costs)
 
-Call supported models by name—no deployment required—and see input, output, and cached tokens priced live against real Azure Retail Prices meters. The CLI and web dashboard share three demos:
+Call supported models by name—no deployment required—and see input, output, and cached tokens priced live against real Azure Retail Prices meters. The web dashboard offers four demos (the CLI covers the instant and prompt-cache flows):
 
 - **Instant Demo** — prices a single live model-by-name call and compares instant vs. deployed rates.
 - **Prompt Cache Demo** — warms a long stable prefix, then shows the cold→warm token savings on a repeated call.
 - **Compaction Demo** — condenses long working notes into a short durable summary and shows the before→after token drop.
+- **Caveman Speak Demo** — answers the same question normally and in terse "caveman" style, showing the output-token drop while code and facts stay exact.
 
 Authentication uses Microsoft Entra (`DefaultAzureCredential`); deployment uses Azure Container Apps via `azd`. No API keys or secrets are stored in this repo.
 
@@ -27,6 +28,7 @@ Authentication uses Microsoft Entra (`DefaultAzureCredential`); deployment uses 
 - [Run](#run)
 - [Prompt Cache Demo](#prompt-cache-demo)
 - [Compaction Demo](#compaction-demo)
+- [Caveman Speak Demo](#caveman-speak-demo)
 - [Example Output](#example-output)
 - [Token Efficiency Principles](#token-efficiency-principles)
 - [Token Efficiency Analyzer Agent](#token-efficiency-analyzer-agent)
@@ -45,7 +47,7 @@ mvn spring-boot:run
 
 > Inside a dev container or GitHub Codespace, the browser sign-in flow is unavailable. Use `az login --use-device-code` instead.
 
-Open `http://localhost:8080` and run the three demos. For the full Azure provision-and-deploy path, jump to [Provision Azure Resources](#provision-azure-resources).
+Open `http://localhost:8080` and run the four demos. For the full Azure provision-and-deploy path, jump to [Provision Azure Resources](#provision-azure-resources).
 
 ## Example Overview
 
@@ -68,6 +70,7 @@ This Java sample calls an instant model from a Foundry project endpoint, prints 
 - Compares the instant (standard pay-as-you-go) per-call price against the same model's data-zone and priority-processing meters, all pulled live from the Azure Retail Prices API.
 - Visualizes prompt cache warming in real time, comparing a cold warm-up call with a warm repeated call and showing the cached prefix that was loaded.
 - Compacts long working notes into a shorter reusable prompt and shows request-level token savings.
+- Answers a question twice—normal prose and terse "caveman" style—to show how much output-token spend drops when filler is cut while code, commands, and facts stay exact.
 - Looks up current prices at runtime from `https://prices.azure.com/api/retail/prices`.
 - Estimates per-call cost from the returned token usage and live retail pricing meters.
 
@@ -75,7 +78,7 @@ This Java sample calls an instant model from a Foundry project endpoint, prints 
 
 ![Token Efficiency dashboard](article-assets/instant-models-dashboard.png)
 
-The dashboard presents three token-efficiency workflows side by side: a live-priced instant model call, real-time prompt cache warming, and prompt compaction.
+The dashboard presents four token-efficiency workflows: a live-priced instant model call, real-time prompt cache warming, prompt compaction, and caveman-speak output compression. The hero above shows the first three; the caveman demo is captured below.
 
 ![Instant model live pricing results](article-assets/instant-models-results.png)
 
@@ -88,6 +91,10 @@ The prompt cache demo warms the model cache in real time. A cold warm-up call pr
 ![Compaction demo results](article-assets/compaction-results.png)
 
 The compaction demo turns long working notes into a shorter reusable summary, showing tokens saved, reduction percentage, and the cost of the compaction call itself.
+
+![Caveman speak demo results](article-assets/caveman-results.png)
+
+The caveman speak demo answers the same question twice—once in normal prose, once in terse "caveman" style inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)—and shows the before→after output-token drop, the reduction percentage, and the cost saved on the priciest (output) meter, while code, commands, and identifiers stay exact.
 
 ## Prerequisites
 
@@ -190,7 +197,7 @@ To run the Spring Boot web dashboard locally:
 mvn spring-boot:run
 ```
 
-Open `http://localhost:8080` and use the buttons to price a live instant call (**Run instant model & price it**), warm the prompt cache (**Warm the cache**), or compact working notes (**Compact prompt**).
+Open `http://localhost:8080` and use the buttons to price a live instant call (**Run instant model & price it**), warm the prompt cache (**Warm the cache**), compact working notes (**Compact prompt**), or compress an answer into caveman speak (**Answer normal & caveman**).
 
 Use `mvn compile exec:java` after `mvn clean` or from a fresh clone. `mvn exec:java` by itself only works after classes already exist under `target/classes`.
 
@@ -233,7 +240,14 @@ Estimated cache savings versus uncached input: USD 0.04377600
 
 ## Compaction Demo
 
-The dashboard also includes a compaction demo for long assistant working notes. Paste or edit the working notes, then select **Compact prompt**. The app asks the selected instant model to produce a shorter durable summary that can be reused in a later assistant turn.
+The dashboard also includes a compaction demo for long assistant working notes. Paste or edit the working notes, then select **Compact prompt**. The app sends the notes with a compaction instruction that tells the model to:
+
+1. Rewrite the working notes as a concise durable summary in at most six sentences, with no bullets or nested lists.
+2. Keep only next-turn essentials — goal, key facts, docs or files to update, validation and deploy commands, blockers, and privacy constraints.
+3. Drop repetition, resolved dead ends, greetings, transient logs, and exact values that aren't needed for the next step (for example, summarizing quota findings as sanitized evidence instead of repeating every number).
+4. Return only the compacted summary.
+
+Unlike the Caveman Speak Demo — which keeps every fact and code snippet exact and only trims filler from a single answer — compaction deliberately *summarizes*, trading some detail to shrink the input carried into later turns.
 
 The result shows:
 
@@ -243,6 +257,21 @@ The result shows:
 - Estimated cost of the compaction call itself.
 
 Compaction is a tradeoff: the current compaction call still costs input and output tokens, but later turns can avoid repeatedly sending the full raw transcript. Before compacting, durable facts should be captured in code, tests, README notes, issues, or a short checklist because a compacted summary might not preserve exact wording or every branch of reasoning.
+
+## Caveman Speak Demo
+
+The dashboard's fourth demo is web-only and inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) — *"why use many token when few do trick."* Select **Answer normal & caveman** to ask the same question twice:
+
+1. A **normal** answer in full prose.
+2. A **caveman** answer that drops filler words, articles, and pleasantries and uses short telegraphic fragments, while keeping every technical fact and keeping code, commands, file paths, API names, and error strings exact.
+
+The result shows the two answers side by side with:
+
+- Output tokens for each answer and the before→after reduction percentage.
+- Tokens saved on output (the priciest per-token meter).
+- Estimated cost saved on output, projected to 1,000 and 1M answers.
+
+Caveman speak compresses only the model's output; the question is unchanged. Output tokens bill at the highest rate (for `5.5 ShortCo`, `USD 30 / 1M` versus `USD 5 / 1M` input), so trimming them is where the savings land. A representative deployed run reduced a React explanation from `469` output tokens to `327` (about `30%` fewer, `1.4×` smaller) while keeping the fix and every code snippet (`useMemo`, `useCallback`) exact. The caveman style guide adds a little fixed input per call, but in real use it lives once in a system prompt and can be prompt-cached, so the output savings dominate across a conversation.
 
 ## Example Output
 
@@ -270,7 +299,7 @@ Token efficiency means getting the answer you need with the smallest useful prom
 - **Keep prompts precise and short.** The instant demo prompt is a single sentence; the cache demo uses a large prefix only to show when caching helps.
 - **Prefer a direct completion** over chat or agent workflows for one-shot jobs. Agents only pay off when you need planning, tools, state, or multi-step behavior.
 - **Reuse stable context with prompt caching.** In the cache demo the warm-up pays for the full prompt and the repeat reuses the prefix. A verified run hit `9728` cached tokens (~`96%`), cutting cost from ~`USD 0.051` to ~`USD 0.007`.
-- **Watch output, not just input.** Short prompts can still get expensive with long answers, so the dashboard shows output tokens and cost separately.
+- **Watch output, not just input.** Short prompts can still get expensive with long answers, so the dashboard shows output tokens and cost separately. The Caveman Speak Demo makes this concrete: cutting filler from the answer drops output tokens (the priciest meter) while keeping every fact and code snippet exact.
 
 ## Token Efficiency Analyzer Agent
 
@@ -346,7 +375,7 @@ An instant model and a Global Standard deployment of the same model bill at the 
 `-- src
     |-- main
     |   |-- java/com/example/instantmodels
-    |   |   |-- DemoController.java              # Web endpoints for the three demos
+    |   |   |-- DemoController.java              # Web endpoints for the four demos
     |   |   |-- DemoRunService.java              # Shared demo + pricing logic
     |   |   |-- InstantModelsApp.java            # CLI entry point
     |   |   |-- InstantModelsConfig.java         # Env / .env configuration

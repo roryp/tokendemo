@@ -44,10 +44,11 @@ This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant 
 
 - The dashboard is a compact operational tool, not a marketing page.
 - Keep the UI colorful but information-dense and readable.
-- Preserve all three flows:
+- Preserve all four flows:
   - Instant demo for a small prompt.
   - Prompt cache demo for a long repeated prefix.
   - Compaction demo for condensing long working notes into a shorter durable summary.
+  - Caveman speak demo for compressing an answer into terse fragments while keeping facts and code exact.
 - Ensure text and metric cards remain readable on narrow screens.
 
 ## Validation Checklist

@@ -44,6 +44,12 @@ class DemoController {
         return demoRunService.runCompactDemo(prompt);
     }
 
+    @PostMapping("/caveman-demo")
+    DemoRunService.CavemanDemoResult cavemanDemo(@RequestBody(required = false) CavemanRequest request) {
+        String prompt = request == null ? null : request.prompt();
+        return demoRunService.runCavemanDemo(prompt);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     ResponseEntity<ApiError> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
@@ -54,6 +60,9 @@ class DemoController {
     }
 
     record CompactRequest(String prompt) {
+    }
+
+    record CavemanRequest(String prompt) {
     }
 
     record ConfigResponse(String model, String pricingRegion, String pricingScope, String pricingMeterPrefix) {

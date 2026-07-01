@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## Repository Purpose
 
-This is a Java 21 Spring Boot sample for Microsoft Foundry instant models. It shows how to call instant models, display token usage, demonstrate prompt caching, estimate cost from live Azure Retail Prices API meters, and deploy the dashboard to Azure Container Apps with azd.
+This is a Java 21 Spring Boot sample for Microsoft Foundry instant models. It shows how to call instant models, display token usage, demonstrate prompt caching, compact long working notes, compress an answer into terse "caveman speak" to cut output tokens, estimate cost from live Azure Retail Prices API meters, and deploy the dashboard to Azure Container Apps with azd.
 
 ## Important Files
 

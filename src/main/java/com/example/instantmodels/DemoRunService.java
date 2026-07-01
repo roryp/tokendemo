@@ -45,6 +45,19 @@ class DemoRunService {
             "Summarize quota findings as sanitized quota evidence instead of repeating every number.",
             "Omit optional follow-ups unless they are required for the next action.",
             "Return only the compacted summary.");
+    private static final String DEFAULT_CAVEMAN_PROMPT = String.join(" ",
+            "Why does passing an inline object or arrow function as a prop cause a React child component",
+            "to re-render on every parent render, and how do I prevent it?");
+    private static final String CAVEMAN_NORMAL_INSTRUCTIONS = String.join(" ",
+            "You are a helpful senior software engineer.",
+            "Answer the developer's question clearly and completely in normal prose.");
+    private static final String CAVEMAN_INSTRUCTIONS = String.join(" ",
+            "Answer like a caveman to save output tokens, inspired by the caveman skill:",
+            "why use many token when few do trick.",
+            "Drop filler words, articles, and pleasantries; use short telegraphic fragments instead of full sentences.",
+            "Keep every technical fact, step, and caveat accurate. Brain still big, mouth small.",
+            "Keep code, commands, file paths, API names, and error strings exact and unchanged.",
+            "Reply in the same language as the question. Compress the style, not the meaning.");
 
     InstantDemoResult runInstantDemo(String promptOverride) {
         String prompt = InstantModelsConfig.valueOrDefault(promptOverride, InstantModelsConfig.prompt());
@@ -123,6 +136,46 @@ class DemoRunService {
                         estimate.totalCost().toPlainString(),
                         formatCost(BigDecimal.ZERO)),
                 pricingSummary(pricing));
+    }
+
+    CavemanDemoResult runCavemanDemo(String promptOverride) {
+        String prompt = InstantModelsConfig.valueOrDefault(promptOverride, DEFAULT_CAVEMAN_PROMPT);
+        ModelPricing pricing = pricing();
+
+        CallSummary normal = summarize("Normal answer", createAnswer(prompt, CAVEMAN_NORMAL_INSTRUCTIONS), pricing);
+        CallSummary caveman = summarize("Caveman answer", createAnswer(prompt, CAVEMAN_INSTRUCTIONS), pricing);
+
+        long normalOutputTokens = normal.usage().outputTokens();
+        long cavemanOutputTokens = caveman.usage().outputTokens();
+        BigDecimal outputCostSaved = pricing.outputMeter().costForTokens(normalOutputTokens)
+                .subtract(pricing.outputMeter().costForTokens(cavemanOutputTokens))
+                .max(BigDecimal.ZERO);
+
+        return new CavemanDemoResult(
+                InstantModelsConfig.model(),
+                prompt,
+                normal.response(),
+                caveman.response(),
+                normal.usage(),
+                caveman.usage(),
+                new CavemanSummary(
+                        normalOutputTokens,
+                        cavemanOutputTokens,
+                        tokensSaved(normalOutputTokens, cavemanOutputTokens),
+                        tokenReductionRate(normalOutputTokens, cavemanOutputTokens)),
+                normal.cost(),
+                caveman.cost(),
+                formatCost(outputCostSaved),
+                pricingSummary(pricing));
+    }
+
+    private Response createAnswer(String prompt, String instructions) {
+        return responsesClient().getResponseService().create(new ResponseCreateParams.Builder()
+                .input(prompt)
+                .instructions(instructions)
+                .model(InstantModelsConfig.model())
+                .maxOutputTokens(600)
+                .build());
     }
 
     private Response createCachedResponse(String prompt, String cacheKey) {
@@ -327,6 +380,23 @@ class DemoRunService {
             CompactionSummary compaction,
             CostSummary cost,
             PricingSummary pricing) {
+    }
+
+    record CavemanDemoResult(
+            String model,
+            String prompt,
+            String normalResponse,
+            String cavemanResponse,
+            UsageSummary normalUsage,
+            UsageSummary cavemanUsage,
+            CavemanSummary caveman,
+            CostSummary normalCost,
+            CostSummary cavemanCost,
+            String outputCostSaved,
+            PricingSummary pricing) {
+    }
+
+    record CavemanSummary(long normalOutputTokens, long cavemanOutputTokens, long tokensSaved, double tokenReductionRate) {
     }
 
     record CallSummary(

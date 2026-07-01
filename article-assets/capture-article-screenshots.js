@@ -114,6 +114,11 @@ async function screenshotPanel(page, selector, name) {
   await freezeAnimations(page);
   await screenshotPanel(page, '.compact-panel', 'compaction-results.png');
 
+  // 5. Caveman speak demo (two model calls: normal + caveman).
+  await runDemo(page, '#cavemanButton', '#cavemanResult .caveman-headline');
+  await freezeAnimations(page);
+  await screenshotPanel(page, '.caveman-panel', 'caveman-results.png');
+
   await browser.close();
   console.log('Captured live dashboard screenshots in article-assets.');
 })().catch((error) => {
