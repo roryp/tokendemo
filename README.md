@@ -300,6 +300,7 @@ Token efficiency means getting the answer you need with the smallest useful prom
 - **Prefer a direct completion** over chat or agent workflows for one-shot jobs. Agents only pay off when you need planning, tools, state, or multi-step behavior.
 - **Reuse stable context with prompt caching.** In the cache demo the warm-up pays for the full prompt and the repeat reuses the prefix. A verified run hit `9728` cached tokens (~`96%`), cutting cost from ~`USD 0.051` to ~`USD 0.007`.
 - **Watch output, not just input.** Short prompts can still get expensive with long answers, so the dashboard shows output tokens and cost separately. The Caveman Speak Demo makes this concrete: cutting filler from the answer drops output tokens (the priciest meter) while keeping every fact and code snippet exact.
+- **Cap spend at the session level.** Per-call efficiency is only half the story—you can also bound total agent spend. [GitHub Copilot CLI and SDK now support AI credit session limits](https://github.blog/changelog/2026-07-01-set-ai-credit-session-limits-in-copilot-cli-and-sdk/) that cap what an agent spends in a single session, counting model calls, subagents, and background work like compaction. Use `/limits` in an interactive CLI session or pass `--max-ai-credits` for noninteractive runs (Copilot CLI `1.0.66`+, SDK `1.0.5`+). It is a soft cap that complements, not replaces, your overall budgets and spending limits.
 
 ## Token Efficiency Analyzer Agent
 
