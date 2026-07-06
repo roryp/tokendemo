@@ -24,6 +24,7 @@ Authentication uses Microsoft Entra (`DefaultAzureCredential`); deployment uses 
 - [Prerequisites](#prerequisites)
 - [Configure](#configure)
 - [Provision Azure Resources](#provision-azure-resources)
+- [Observability](#observability)
 - [Configuration Reference](#configuration-reference)
 - [Run](#run)
 - [Prompt Cache Demo](#prompt-cache-demo)
@@ -73,6 +74,7 @@ This Java sample calls an instant model from a Foundry project endpoint, prints 
 - Answers a question twice—normal prose and terse "caveman" style—to show how much output-token spend drops when filler is cut while code, commands, and facts stay exact.
 - Looks up current prices at runtime from `https://prices.azure.com/api/retail/prices`.
 - Estimates per-call cost from the returned token usage and live retail pricing meters.
+- Streams every call's token usage (input, output, cached, total), estimated cost, and GenAI traces to Application Insights, and connects that resource to the Foundry project so the same numbers surface in the Foundry portal.
 
 ## Screenshots
 
@@ -140,6 +142,7 @@ This repo includes an Azure Developer CLI (`azd`) and Bicep setup that creates t
 - Azure Container Registry
 - Azure Container Apps environment and Container App
 - Managed identity with ACR pull and Foundry project access
+- Application Insights (workspace-based) connected to the Foundry project for token and trace observability
 
 The default location is `westus3`, which is the preview region used for instant model testing.
 
@@ -166,6 +169,35 @@ To remove the Azure resources later:
 
 ```powershell
 azd down
+```
+
+## Observability
+
+Every instant model call is instrumented with OpenTelemetry and shipped to **Application Insights**, and that same Application Insights resource is connected to the Foundry project so the data also appears in the **Foundry portal**.
+
+`azd up` provisions a workspace-based Application Insights resource, injects its connection string into the Container App as `APPLICATIONINSIGHTS_CONNECTION_STRING`, and creates an `AppInsights` connection on the Foundry project. The container runs the [Application Insights Java agent](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable?tabs=java), which auto-instruments HTTP traffic and exports the custom GenAI telemetry emitted by [`TokenTelemetry`](src/main/java/com/example/instantmodels/TokenTelemetry.java). No connection string is committed; local runs without the agent fall back to a no-op, so telemetry never blocks the app.
+
+Each call emits:
+
+- A GenAI client span (`chat <model>`) following the [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/): `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.total_tokens`, plus `im.demo` and `im.cached_input_tokens`.
+- Token metrics `gen_ai.client.token.usage` (by `gen_ai.token.type`) and `instantmodels.tokens` (by `im.token_type`: `input`, `standard_input`, `cached_input`, `output`, `total`).
+- Cost and call-count metrics `instantmodels.cost_usd` and `instantmodels.model_calls`, dimensioned by `im.demo` and `im.model`.
+
+### View the metrics in the Foundry portal
+
+1. Open the [Foundry portal](https://ai.azure.com/), select your project, and run a few demos in the web app first.
+2. Go to **Agents → Traces** to see each call as a GenAI span with its input, output, cached, and total token counts.
+3. Go to **Monitoring → Application analytics** for the token-consumption, latency, and cost dashboards.
+
+### Query the metrics directly
+
+Custom metrics land in the `AppMetrics` table and GenAI spans in `AppDependencies` in the connected Log Analytics workspace:
+
+```kusto
+AppMetrics
+| where Name == 'instantmodels.tokens'
+| extend demo = tostring(Properties['im.demo']), tokenType = tostring(Properties['im.token_type'])
+| summarize tokens = sum(Sum) by demo, tokenType
 ```
 
 ## Configuration Reference
@@ -368,7 +400,7 @@ An instant model and a Global Standard deployment of the same model bill at the 
 |-- pom.xml
 |-- README.md
 |-- article-assets/                 # README screenshots + Playwright capture script
-|-- infra/                          # Bicep: Foundry, ACR, Container Apps, managed identity, RBAC
+|-- infra/                          # Bicep: Foundry, ACR, Container Apps, App Insights, managed identity, RBAC
 |   |-- container-app.bicep
 |   |-- foundry.bicep
 |   |-- main.bicep
@@ -383,7 +415,8 @@ An instant model and a Global Standard deployment of the same model bill at the 
     |   |   |-- InstantModelsWebApplication.java # Spring Boot web entry point
     |   |   |-- ModelPricing.java
     |   |   |-- PromptCacheDemoApp.java          # CLI prompt-cache demo
-    |   |   `-- RetailPricingClient.java         # Live Azure Retail Prices lookup
+    |   |   |-- RetailPricingClient.java         # Live Azure Retail Prices lookup
+    |   |   `-- TokenTelemetry.java              # OpenTelemetry GenAI spans + token/cost metrics
     |   `-- resources
     |       |-- application.properties
     |       |-- simplelogger.properties

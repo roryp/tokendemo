@@ -29,6 +29,7 @@ var normalizedEnvironmentName = toLower(replace(environmentName, '-', ''))
 var containerAppName = take('ca-${environmentName}-${resourceToken}', 32)
 var containerEnvironmentName = take('cae-${environmentName}-${resourceToken}', 60)
 var logAnalyticsName = take('log-${environmentName}-${resourceToken}', 63)
+var applicationInsightsName = take('appi-${environmentName}-${resourceToken}', 255)
 var registryName = take('cr${normalizedEnvironmentName}${resourceToken}', 50)
 var managedIdentityName = take('id-${environmentName}-${resourceToken}', 128)
 var acrPullRoleDefinitionId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
@@ -95,6 +96,41 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   }
 }
 
+// Workspace-based Application Insights that stores the GenAI traces and token/cost metrics.
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: applicationInsightsName
+  location: location
+  tags: tags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalytics.id
+    IngestionMode: 'LogAnalytics'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+// Connect Application Insights to the Foundry project so token traces and the monitoring
+// dashboard light up in the Foundry portal (Agents > Traces and Monitoring).
+resource foundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-06-01' = {
+  parent: aiAccount::project
+  name: 'appinsights'
+  properties: {
+    category: 'AppInsights'
+    target: applicationInsights.id
+    authType: 'ApiKey'
+    isSharedToAll: true
+    credentials: {
+      key: applicationInsights.properties.ConnectionString
+    }
+    metadata: {
+      ApiType: 'Azure'
+      ResourceId: applicationInsights.id
+    }
+  }
+}
+
 resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: containerEnvironmentName
   location: location
@@ -130,6 +166,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
+      registries: [
+        {
+          server: registry.properties.loginServer
+          identity: managedIdentity.id
+        }
+      ]
     }
     template: {
       containers: [
@@ -165,6 +207,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'FOUNDRY_PRICING_SCOPE'
               value: 'Gl'
             }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: applicationInsights.properties.ConnectionString
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_ROLE_NAME'
+              value: 'instantmodels-web'
+            }
           ]
           resources: {
             cpu: json('0.5')
@@ -190,3 +240,5 @@ output containerAppName string = containerApp.name
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output managedIdentityId string = managedIdentity.id
 output managedIdentityClientId string = managedIdentity.properties.clientId
+output applicationInsightsName string = applicationInsights.name
+output applicationInsightsId string = applicationInsights.id

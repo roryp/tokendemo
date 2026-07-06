@@ -59,15 +59,21 @@ class DemoRunService {
             "Keep code, commands, file paths, API names, and error strings exact and unchanged.",
             "Reply in the same language as the question. Compress the style, not the meaning.");
 
+    private final TokenTelemetry telemetry;
+
+    DemoRunService(TokenTelemetry telemetry) {
+        this.telemetry = telemetry;
+    }
+
     InstantDemoResult runInstantDemo(String promptOverride) {
         String prompt = InstantModelsConfig.valueOrDefault(promptOverride, InstantModelsConfig.prompt());
-        Response response = responsesClient().getResponseService().create(new ResponseCreateParams.Builder()
+        Response response = execute("instant", new ResponseCreateParams.Builder()
                 .input(prompt)
                 .model(InstantModelsConfig.model())
                 .build());
 
         ModelPricing pricing = pricing();
-        CallSummary summary = summarize("Instant model call", response, pricing);
+        CallSummary summary = summarize("instant", "Instant model call", response, pricing);
         PricingEstimate estimate = pricing.estimateCost(usage(response));
         return new InstantDemoResult(
                 InstantModelsConfig.model(),
@@ -97,13 +103,13 @@ class DemoRunService {
                 cacheablePromptPreview(),
                 pricingSummary(pricing),
                 List.of(
-                        summarize("Warm-up call", warmUp, pricing),
-                        summarize("Repeated call", repeated, pricing)));
+                        summarize("prompt-cache", "Warm-up call", warmUp, pricing),
+                        summarize("prompt-cache", "Repeated call", repeated, pricing)));
     }
 
     CompactDemoResult runCompactDemo(String promptOverride) {
         String prompt = InstantModelsConfig.valueOrDefault(promptOverride, DEFAULT_COMPACT_PROMPT);
-        Response response = responsesClient().getResponseService().create(new ResponseCreateParams.Builder()
+        Response response = execute("compaction", new ResponseCreateParams.Builder()
                 .input(prompt)
                 .instructions(COMPACTION_INSTRUCTIONS)
                 .model(InstantModelsConfig.model())
@@ -113,6 +119,8 @@ class DemoRunService {
         ResponseUsage usage = usage(response);
         ModelPricing pricing = pricing();
         PricingEstimate estimate = pricing.estimateCost(usage);
+        telemetry.recordCost("compaction", InstantModelsConfig.model(), estimate.currencyCode(),
+                estimate.totalCost().doubleValue());
         String compactedPrompt = outputText(response);
         long compactedTokens = usage.outputTokens();
 
@@ -142,8 +150,10 @@ class DemoRunService {
         String prompt = InstantModelsConfig.valueOrDefault(promptOverride, DEFAULT_CAVEMAN_PROMPT);
         ModelPricing pricing = pricing();
 
-        CallSummary normal = summarize("Normal answer", createAnswer(prompt, CAVEMAN_NORMAL_INSTRUCTIONS), pricing);
-        CallSummary caveman = summarize("Caveman answer", createAnswer(prompt, CAVEMAN_INSTRUCTIONS), pricing);
+        CallSummary normal = summarize("caveman-normal", "Normal answer",
+                createAnswer("caveman-normal", prompt, CAVEMAN_NORMAL_INSTRUCTIONS), pricing);
+        CallSummary caveman = summarize("caveman", "Caveman answer",
+                createAnswer("caveman", prompt, CAVEMAN_INSTRUCTIONS), pricing);
 
         long normalOutputTokens = normal.usage().outputTokens();
         long cavemanOutputTokens = caveman.usage().outputTokens();
@@ -169,8 +179,8 @@ class DemoRunService {
                 pricingSummary(pricing));
     }
 
-    private Response createAnswer(String prompt, String instructions) {
-        return responsesClient().getResponseService().create(new ResponseCreateParams.Builder()
+    private Response createAnswer(String demo, String prompt, String instructions) {
+        return execute(demo, new ResponseCreateParams.Builder()
                 .input(prompt)
                 .instructions(instructions)
                 .model(InstantModelsConfig.model())
@@ -186,7 +196,12 @@ class DemoRunService {
                 .promptCacheKey(cacheKey)
                 .build();
 
-        return responsesClient().getResponseService().create(responseRequest);
+        return execute("prompt-cache", responseRequest);
+    }
+
+    private Response execute(String demo, ResponseCreateParams params) {
+        return telemetry.recordCall(demo, InstantModelsConfig.model(),
+                () -> responsesClient().getResponseService().create(params));
     }
 
     private ResponsesClient responsesClient() {
@@ -205,9 +220,11 @@ class DemoRunService {
                 InstantModelsConfig.pricingScope());
     }
 
-    private CallSummary summarize(String label, Response response, ModelPricing pricing) {
+    private CallSummary summarize(String demo, String label, Response response, ModelPricing pricing) {
         ResponseUsage usage = usage(response);
         PricingEstimate estimate = pricing.estimateCost(usage);
+        telemetry.recordCost(demo, InstantModelsConfig.model(), estimate.currencyCode(),
+                estimate.totalCost().doubleValue());
         BigDecimal uncachedCost = pricing.inputMeter().costForTokens(usage.inputTokens())
                 .add(pricing.outputMeter().costForTokens(usage.outputTokens()))
                 .setScale(8, RoundingMode.HALF_UP);

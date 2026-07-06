@@ -80,3 +80,5 @@ output AZURE_CONTAINER_APP_NAME string = containerApp.outputs.containerAppName
 output AZURE_CONTAINER_APP_URL string = containerApp.outputs.containerAppUrl
 output AZURE_CONTAINER_APP_IDENTITY_ID string = containerApp.outputs.managedIdentityId
 output AZURE_CONTAINER_APP_IDENTITY_CLIENT_ID string = containerApp.outputs.managedIdentityClientId
+output AZURE_APPLICATION_INSIGHTS_NAME string = containerApp.outputs.applicationInsightsName
+output AZURE_APPLICATION_INSIGHTS_ID string = containerApp.outputs.applicationInsightsId
