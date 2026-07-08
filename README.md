@@ -272,7 +272,7 @@ Estimated cache savings versus uncached input: USD 0.04377600
 
 ## Compaction Demo
 
-The dashboard also includes a compaction demo for long assistant working notes. Paste or edit the working notes, then select **Compact prompt**. The app sends the notes with a compaction instruction that tells the model to:
+The dashboard also includes a compaction demo for long assistant working notes. The working notes are shown in a read-only field; select **Compact prompt** to run the fixed sample. The app sends the notes with a compaction instruction that tells the model to:
 
 1. Rewrite the working notes as a concise durable summary in at most six sentences, with no bullets or nested lists.
 2. Keep only next-turn essentials — goal, key facts, docs or files to update, validation and deploy commands, blockers, and privacy constraints.

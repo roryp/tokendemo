@@ -177,6 +177,33 @@ textarea {
     background: #fbfdff;
 }
 
+textarea[readonly] {
+    background: #eef2f7;
+    color: #47566b;
+    cursor: not-allowed;
+    resize: none;
+}
+
+textarea[readonly]:focus {
+    outline: none;
+    border-color: var(--line);
+    box-shadow: none;
+}
+
+.field-lock {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #e2e8f2;
+    color: var(--muted);
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+}
+
 .panel-copy { color: #3d526c; line-height: 1.55; }
 
 .action {

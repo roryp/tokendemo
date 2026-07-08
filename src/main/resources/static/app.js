@@ -2,9 +2,6 @@ const instantButton = document.querySelector('#instantButton');
 const cacheButton = document.querySelector('#cacheButton');
 const compactButton = document.querySelector('#compactButton');
 const cavemanButton = document.querySelector('#cavemanButton');
-const promptBox = document.querySelector('#promptBox');
-const compactPromptBox = document.querySelector('#compactPromptBox');
-const cavemanPromptBox = document.querySelector('#cavemanPromptBox');
 const instantResult = document.querySelector('#instantResult');
 const cacheResult = document.querySelector('#cacheResult');
 const compactResult = document.querySelector('#compactResult');
@@ -565,7 +562,7 @@ instantButton.addEventListener('click', async () => {
     instantResult.className = 'result empty';
     instantResult.textContent = 'Calling the instant model...';
     try {
-        renderInstant(await postJson('/api/instant', { prompt: promptBox.value }));
+        renderInstant(await postJson('/api/instant'));
     } catch (error) {
         showError(instantResult, error);
     } finally {
@@ -591,7 +588,7 @@ compactButton.addEventListener('click', async () => {
     compactResult.className = 'result empty';
     compactResult.textContent = 'Compacting working notes...';
     try {
-        renderCompaction(await postJson('/api/compact-demo', { prompt: compactPromptBox.value }));
+        renderCompaction(await postJson('/api/compact-demo'));
     } catch (error) {
         showError(compactResult, error);
     } finally {
@@ -604,7 +601,7 @@ cavemanButton.addEventListener('click', async () => {
     cavemanResult.className = 'result empty';
     cavemanResult.textContent = 'Asking normally, then like a caveman...';
     try {
-        renderCaveman(await postJson('/api/caveman-demo', { prompt: cavemanPromptBox.value }));
+        renderCaveman(await postJson('/api/caveman-demo'));
     } catch (error) {
         showError(cavemanResult, error);
     } finally {

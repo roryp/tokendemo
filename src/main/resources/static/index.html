@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Token Efficiency</title>
-    <link rel="stylesheet" href="/styles.css?v=20260706-telemetry-v1">
+    <link rel="stylesheet" href="/styles.css?v=20260708-readonly-prompts">
 </head>
 <body>
     <main class="shell">
@@ -40,8 +40,8 @@
                     <span class="chip">1 call</span>
                 </div>
                 <p class="panel-copy">An <strong>instant model</strong> is called by name &mdash; there's no deployment to create or manage, and it's available to every Foundry project automatically. It bills at standard pay-as-you-go rates, so it stays much cheaper than a data-zone or priority deployment. This call is priced live against Azure Retail Prices meters, then scaled to 1,000 and 1M runs.</p>
-                <label for="promptBox">Prompt</label>
-                <textarea id="promptBox" rows="5">In one sentence, why are instant models useful for prototyping?</textarea>
+                <label for="promptBox">Prompt <span class="field-lock" title="This prompt is fixed and cannot be edited">read-only</span></label>
+                <textarea id="promptBox" rows="5" readonly aria-readonly="true">In one sentence, what are instant models in Microsoft Foundry?</textarea>
                 <button id="instantButton" class="action action-primary" type="button">Run instant model &amp; price it</button>
                 <div id="instantResult" class="result empty">Ready to price a live call.</div>
             </article>
@@ -68,8 +68,8 @@
                     <span class="chip">1 call</span>
                 </div>
                 <p class="panel-copy">Long working notes pile up tokens on every turn. One call compacts them into a short, durable summary that keeps only the next-turn essentials &mdash; goal, key facts, and commands &mdash; so future prompts stay cheap. See the before&rarr;after token drop and reduction rate.</p>
-                <label for="compactPromptBox">Working notes</label>
-                <textarea id="compactPromptBox" rows="10">Goal: ship a small Java dashboard change that explains instant model throughput limits.
+                <label for="compactPromptBox">Working notes <span class="field-lock" title="These notes are a fixed sample and cannot be edited">read-only</span></label>
+                <textarea id="compactPromptBox" rows="10" readonly aria-readonly="true">Goal: ship a small Java dashboard change that explains instant model throughput limits.
 Context gathered: Microsoft Foundry instant models are preview-scoped to West US 3 and can be called by model name without creating a deployment. They draw from a per-model global quota pool assigned to the subscription. The app should keep token usage, pricing, and cache behavior visible because this repository is a cost-transparency sample.
 Online docs checked: instant models are for getting started, prototyping, and trying new models. Deployments remain the right choice for reserved throughput, custom guardrails, data residency requirements, endpoint-specific configuration, fine-grained quota partitioning, fine-tuned models, or predictable production capacity.
 Sanitized validation finding: one development subscription reported Tier 5 Global Standard quota for gpt-chat-latest of 50,000 requests per minute and 5,000,000 tokens per minute, with no Global Standard deployment quota reserved at the time of the check. Do not include subscription IDs, tenant IDs, user names, or generated Azure environment files in docs.
@@ -88,13 +88,13 @@ Open question: after the docs update, add a dashboard example that compacts long
                     <span class="chip">2 calls</span>
                 </div>
                 <p class="panel-copy">Inspired by <a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener noreferrer">JuliusBrussee/caveman</a> &mdash; <em>&ldquo;why use many token when few do trick.&rdquo;</em> The same question is answered twice: once in normal prose, once in caveman-speak that drops filler and keeps every technical fact, code snippet, and command exact. Output tokens are the priciest kind, so watch them collapse while the answer stays correct. Brain still big, mouth small.</p>
-                <label for="cavemanPromptBox">Question</label>
-                <textarea id="cavemanPromptBox" rows="3">Why does passing an inline object or arrow function as a prop cause a React child component to re-render on every parent render, and how do I prevent it?</textarea>
+                <label for="cavemanPromptBox">Question <span class="field-lock" title="This question is fixed and cannot be edited">read-only</span></label>
+                <textarea id="cavemanPromptBox" rows="3" readonly aria-readonly="true">Why does passing an inline object or arrow function as a prop cause a React child component to re-render on every parent render, and how do I prevent it?</textarea>
                 <button id="cavemanButton" class="action action-caveman" type="button">Answer normal &amp; caveman</button>
                 <div id="cavemanResult" class="result empty">Ready to grunt.</div>
             </article>
         </section>
     </main>
-    <script src="/app.js?v=20260706-telemetry-v1"></script>
+    <script src="/app.js?v=20260708-readonly-prompts"></script>
 </body>
 </html>

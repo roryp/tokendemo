@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,9 +27,8 @@ class DemoController {
     }
 
     @PostMapping("/instant")
-    DemoRunService.InstantDemoResult instant(@RequestBody(required = false) InstantRequest request) {
-        String prompt = request == null ? null : request.prompt();
-        return demoRunService.runInstantDemo(prompt);
+    DemoRunService.InstantDemoResult instant() {
+        return demoRunService.runInstantDemo();
     }
 
     @PostMapping("/cache-demo")
@@ -39,30 +37,19 @@ class DemoController {
     }
 
     @PostMapping("/compact-demo")
-    DemoRunService.CompactDemoResult compactDemo(@RequestBody(required = false) CompactRequest request) {
-        String prompt = request == null ? null : request.prompt();
-        return demoRunService.runCompactDemo(prompt);
+    DemoRunService.CompactDemoResult compactDemo() {
+        return demoRunService.runCompactDemo();
     }
 
     @PostMapping("/caveman-demo")
-    DemoRunService.CavemanDemoResult cavemanDemo(@RequestBody(required = false) CavemanRequest request) {
-        String prompt = request == null ? null : request.prompt();
-        return demoRunService.runCavemanDemo(prompt);
+    DemoRunService.CavemanDemoResult cavemanDemo() {
+        return demoRunService.runCavemanDemo();
     }
 
     @ExceptionHandler(RuntimeException.class)
     ResponseEntity<ApiError> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                 .body(new ApiError(ex.getClass().getSimpleName(), ex.getMessage()));
-    }
-
-    record InstantRequest(String prompt) {
-    }
-
-    record CompactRequest(String prompt) {
-    }
-
-    record CavemanRequest(String prompt) {
     }
 
     record ConfigResponse(String model, String pricingRegion, String pricingScope, String pricingMeterPrefix) {

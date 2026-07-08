@@ -65,8 +65,8 @@ class DemoRunService {
         this.telemetry = telemetry;
     }
 
-    InstantDemoResult runInstantDemo(String promptOverride) {
-        String prompt = InstantModelsConfig.valueOrDefault(promptOverride, InstantModelsConfig.prompt());
+    InstantDemoResult runInstantDemo() {
+        String prompt = InstantModelsConfig.prompt();
         Response response = execute("instant", new ResponseCreateParams.Builder()
                 .input(prompt)
                 .model(InstantModelsConfig.model())
@@ -107,8 +107,8 @@ class DemoRunService {
                         summarize("prompt-cache", "Repeated call", repeated, pricing)));
     }
 
-    CompactDemoResult runCompactDemo(String promptOverride) {
-        String prompt = InstantModelsConfig.valueOrDefault(promptOverride, DEFAULT_COMPACT_PROMPT);
+    CompactDemoResult runCompactDemo() {
+        String prompt = DEFAULT_COMPACT_PROMPT;
         Response response = execute("compaction", new ResponseCreateParams.Builder()
                 .input(prompt)
                 .instructions(COMPACTION_INSTRUCTIONS)
@@ -146,8 +146,8 @@ class DemoRunService {
                 pricingSummary(pricing));
     }
 
-    CavemanDemoResult runCavemanDemo(String promptOverride) {
-        String prompt = InstantModelsConfig.valueOrDefault(promptOverride, DEFAULT_CAVEMAN_PROMPT);
+    CavemanDemoResult runCavemanDemo() {
+        String prompt = DEFAULT_CAVEMAN_PROMPT;
         ModelPricing pricing = pricing();
 
         CallSummary normal = summarize("caveman-normal", "Normal answer",
