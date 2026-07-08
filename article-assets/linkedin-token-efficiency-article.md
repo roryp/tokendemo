@@ -22,11 +22,11 @@ What makes it worth a look:
 
 ## Architecture
 
-Java 21, Spring Boot, Thymeleaf, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. One public server-rendered page posts fixed demo actions back to Spring; the browser never receives model-call JSON endpoints.
+Java 21, Spring Boot, Thymeleaf, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. One public server-rendered page displays fixed cached demo results; the browser never receives model-call JSON endpoints or demo action forms.
 
 ```text
 Browser (server-rendered dashboard)
-    │  POST / with fixed demo action
+    │  GET /
    ▼
 @Controller ──▶ cached fixed result ──▶ DemoRunService
    │ Azure AI Agents SDK        │ java.net.http + OData

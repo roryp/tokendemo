@@ -229,7 +229,7 @@ To run the Spring Boot web dashboard locally:
 mvn spring-boot:run
 ```
 
-Open `http://localhost:8080` and use the buttons to price a fixed instant call (**Run instant model & price it**), warm the prompt cache (**Warm the cache**), compact working notes (**Compact prompt**), or compress an answer into caveman speak (**Answer normal & caveman**). The dashboard is server-rendered with Thymeleaf: there are no public `/api/*` JSON endpoints and no browser JavaScript calls to the model. Fixed demo results are cached in the Spring app instance so repeated button clicks do not keep buying model calls.
+Open `http://localhost:8080` to view the fixed instant pricing, prompt cache, compaction, and caveman-speak demos. The dashboard is server-rendered with Thymeleaf: there are no public `/api/*` JSON endpoints, no browser JavaScript calls to the model, and no demo action buttons or public postback route. Fixed demo results are cached in the Spring app instance after the first render.
 
 Use `mvn compile exec:java` after `mvn clean` or from a fresh clone. `mvn exec:java` by itself only works after classes already exist under `target/classes`.
 
@@ -243,7 +243,7 @@ mvn compile exec:java
 
 ## Prompt Cache Demo
 
-The default sample is intentionally small, so it usually has no cached input tokens. For demos, use the dedicated prompt-cache example. It sends the same long prompt twice with a stable `promptCacheKey`, then compares the warm-up call with the repeated call. This demo intentionally uses a much longer prompt than the default sample so the cache behavior is visible. In the web dashboard, the **Warm the cache** button renders the cached server-side result: the cold warm-up and warm repeated calls are compared side by side, and the panel lists exactly what was loaded into cache.
+The default sample is intentionally small, so it usually has no cached input tokens. For demos, use the dedicated prompt-cache example. It sends the same long prompt twice with a stable `promptCacheKey`, then compares the warm-up call with the repeated call. This demo intentionally uses a much longer prompt than the default sample so the cache behavior is visible. In the web dashboard, the cached server-side result compares the cold warm-up and warm repeated calls side by side, and the panel lists exactly what was loaded into cache.
 
 ```powershell
 mvn compile exec:java '-Dexec.mainClass=com.example.instantmodels.PromptCacheDemoApp'
@@ -272,7 +272,7 @@ Estimated cache savings versus uncached input: USD 0.04377600
 
 ## Compaction Demo
 
-The dashboard also includes a compaction demo for long assistant working notes. The working notes are shown in a read-only field; select **Compact prompt** to run the fixed sample. The app sends the notes with a compaction instruction that tells the model to:
+The dashboard also includes a compaction demo for long assistant working notes. The working notes are shown in a read-only field. The app sends the fixed notes with a compaction instruction that tells the model to:
 
 1. Rewrite the working notes as a concise durable summary in at most six sentences, with no bullets or nested lists.
 2. Keep only next-turn essentials — goal, key facts, docs or files to update, validation and deploy commands, blockers, and privacy constraints.
@@ -292,7 +292,7 @@ Compaction is a tradeoff: the current compaction call still costs input and outp
 
 ## Caveman Speak Demo
 
-The dashboard's fourth demo is web-only and inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) — *"why use many token when few do trick."* Select **Answer normal & caveman** to ask the same question twice:
+The dashboard's fourth demo is web-only and inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) — *"why use many token when few do trick."* The fixed demo asks the same question twice:
 
 1. A **normal** answer in full prose.
 2. A **caveman** answer that drops filler words, articles, and pleasantries and uses short telegraphic fragments, while keeping every technical fact and keeping code, commands, file paths, API names, and error strings exact.

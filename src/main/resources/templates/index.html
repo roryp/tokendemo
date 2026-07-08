@@ -20,8 +20,8 @@
                     </a>
                 </div>
                 <h1 id="page-title">Token Efficiency</h1>
-                <p class="lede">Run fixed server-side demos for instant model pricing, prompt cache reuse, compaction, and output compression without exposing browser-callable model APIs.</p>
-                <p class="security-note">Public page only. No JavaScript API calls. Demo results are fixed and cached inside the Spring app instance.</p>
+                <p class="lede">Review fixed server-side demos for instant model pricing, prompt cache reuse, compaction, and output compression without exposing browser-callable model APIs.</p>
+                <p class="security-note">Public page only. No JavaScript, no API endpoints, no forms. Demo results are fixed and cached inside the Spring app instance.</p>
             </div>
             <dl class="config-strip" aria-label="Runtime configuration">
                 <div><dt>Model</dt><dd th:text="${modelValue}">gpt-chat-latest</dd></div>
@@ -31,9 +31,7 @@
             </dl>
         </section>
 
-        <section class="result error global-error" th:if="${error != null}" th:text="${error}">Error</section>
-
-        <section class="workspace" aria-label="Demo controls and output">
+        <section class="workspace" aria-label="Demo output">
             <article class="panel instant-panel">
                 <div class="panel-heading">
                     <div>
@@ -45,11 +43,7 @@
                 <p class="panel-copy">An <strong>instant model</strong> is called by name and priced against Azure Retail Prices meters, then scaled to 1,000 and 1M runs.</p>
                 <label for="promptBox">Prompt <span class="field-lock" title="This prompt is fixed and cannot be edited">read-only</span></label>
                 <textarea id="promptBox" rows="5" readonly aria-readonly="true" th:text="${instantPrompt}">In one sentence, what are instant models in Microsoft Foundry?</textarea>
-                <form class="action-form" method="post" th:action="@{/}">
-                    <input type="hidden" name="demo" value="instant">
-                    <button class="action action-primary" type="submit">Run instant model &amp; price it</button>
-                </form>
-                <div class="result empty" th:if="${instant == null}">Ready to price the fixed server-side call.</div>
+                <div class="result error" th:if="${instantError != null}" th:text="${instantError}">Instant demo error</div>
                 <div class="result" th:if="${instant != null}">
                     <p class="answer" th:text="${instant.response}">Answer</p>
                     <div class="price-headline">
@@ -72,11 +66,7 @@
             <article class="panel cache-panel">
                 <div class="panel-heading"><div><p class="eyebrow">Reusable prefix</p><h2>Prompt Cache Demo</h2></div><span class="chip">2 calls</span></div>
                 <p class="panel-copy">A fixed long prefix warms the model cache, then a repeated call shows the cold-to-warm token savings.</p>
-                <form class="action-form" method="post" th:action="@{/}">
-                    <input type="hidden" name="demo" value="cache">
-                    <button class="action action-secondary" type="submit">Warm the cache</button>
-                </form>
-                <div class="result empty" th:if="${cache == null}">Ready to warm the fixed cache sample.</div>
+                <div class="result error" th:if="${cacheError != null}" th:text="${cacheError}">Cache demo error</div>
                 <div class="result" th:if="${cache != null}">
                     <div class="cache-headline">
                         <div class="cache-figure"><strong th:text="${#numbers.formatDecimal(cache.calls[1].cache.cacheHitRate, 1, 2) + '%'}">0%</strong><span>cache hit on reuse</span></div>
@@ -101,11 +91,7 @@
                 <p class="panel-copy">Fixed working notes are compacted into a short durable summary for cheaper future prompts.</p>
                 <label for="compactPromptBox">Working notes <span class="field-lock" title="These notes are a fixed sample and cannot be edited">read-only</span></label>
                 <textarea id="compactPromptBox" rows="10" readonly aria-readonly="true" th:text="${compactPrompt}">Working notes</textarea>
-                <form class="action-form" method="post" th:action="@{/}">
-                    <input type="hidden" name="demo" value="compact">
-                    <button class="action action-tertiary" type="submit">Compact prompt</button>
-                </form>
-                <div class="result empty" th:if="${compact == null}">Ready to compact the fixed working notes.</div>
+                <div class="result error" th:if="${compactError != null}" th:text="${compactError}">Compaction demo error</div>
                 <div class="result" th:if="${compact != null}">
                     <div class="compaction-headline"><div class="headline-figure"><strong th:text="${#numbers.formatDecimal(compact.compaction.tokenReductionRate, 1, 0) + '%'}">0%</strong><span>fewer tokens</span></div><div class="headline-meta"><span class="headline-saved" th:text="${compact.compaction.tokensSaved + ' tokens reclaimed on every future reuse'}">tokens saved</span></div></div>
                     <div class="compaction-columns">
@@ -121,11 +107,7 @@
                 <p class="panel-copy">The same fixed question is answered normally, then again in terse caveman-speak to show output token savings.</p>
                 <label for="cavemanPromptBox">Question <span class="field-lock" title="This question is fixed and cannot be edited">read-only</span></label>
                 <textarea id="cavemanPromptBox" rows="3" readonly aria-readonly="true" th:text="${cavemanPrompt}">Question</textarea>
-                <form class="action-form" method="post" th:action="@{/}">
-                    <input type="hidden" name="demo" value="caveman">
-                    <button class="action action-caveman" type="submit">Answer normal &amp; caveman</button>
-                </form>
-                <div class="result empty" th:if="${caveman == null}">Ready to run the fixed output-compression sample.</div>
+                <div class="result error" th:if="${cavemanError != null}" th:text="${cavemanError}">Caveman demo error</div>
                 <div class="result" th:if="${caveman != null}">
                     <div class="compaction-headline caveman-headline"><div class="headline-figure"><strong th:text="${#numbers.formatDecimal(caveman.caveman.tokenReductionRate, 1, 0) + '%'}">0%</strong><span>fewer output tokens</span></div><div class="headline-meta"><span class="headline-saved" th:text="${caveman.caveman.tokensSaved + ' output tokens dropped - same technical answer'}">tokens saved</span></div></div>
                     <div class="caveman-columns">

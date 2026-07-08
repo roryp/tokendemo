@@ -5,8 +5,6 @@ import java.util.function.Supplier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 class DemoController {
@@ -23,25 +21,7 @@ class DemoController {
     @GetMapping("/")
     String index(Model model) {
         populateBaseModel(model);
-        return "index";
-    }
-
-    @PostMapping("/")
-    String runDemo(@RequestParam String demo, Model model) {
-        populateBaseModel(model);
-        try {
-            switch (demo) {
-                case "instant" -> model.addAttribute("instant", instantResult());
-                case "cache" -> model.addAttribute("cache", cacheResult());
-                case "compact" -> model.addAttribute("compact", compactResult());
-                case "caveman" -> model.addAttribute("caveman", cavemanResult());
-                default -> model.addAttribute("error", "Unknown demo: " + demo);
-            }
-        } catch (RuntimeException ex) {
-            model.addAttribute("error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
-        }
-
-        model.addAttribute("activeDemo", demo);
+        populateDemoResults(model);
         return "index";
     }
 
@@ -56,6 +36,21 @@ class DemoController {
         model.addAttribute("cache", cacheResult);
         model.addAttribute("compact", compactResult);
         model.addAttribute("caveman", cavemanResult);
+    }
+
+    private void populateDemoResults(Model model) {
+        addDemoResult(model, "instant", "instantError", this::instantResult);
+        addDemoResult(model, "cache", "cacheError", this::cacheResult);
+        addDemoResult(model, "compact", "compactError", this::compactResult);
+        addDemoResult(model, "caveman", "cavemanError", this::cavemanResult);
+    }
+
+    private static <T> void addDemoResult(Model model, String attribute, String errorAttribute, Supplier<T> supplier) {
+        try {
+            model.addAttribute(attribute, supplier.get());
+        } catch (RuntimeException ex) {
+            model.addAttribute(errorAttribute, ex.getClass().getSimpleName() + ": " + ex.getMessage());
+        }
     }
 
     private synchronized DemoRunService.InstantDemoResult instantResult() {
