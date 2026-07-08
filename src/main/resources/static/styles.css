@@ -104,6 +104,18 @@ h1 { font-size: clamp(2.5rem, 7vw, 5.4rem); line-height: 0.94; }
 h2 { font-size: 1.45rem; }
 .lede { max-width: 720px; color: #38506b; font-size: 1.05rem; line-height: 1.55; }
 
+.security-note {
+    display: inline-block;
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid rgba(5, 132, 94, 0.24);
+    border-radius: 8px;
+    background: rgba(223, 249, 236, 0.82);
+    color: #245f4e;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
 .config-strip {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -224,6 +236,9 @@ textarea[readonly]:focus {
 .action-caveman { background: var(--clay); }
 .action:disabled { cursor: progress; opacity: 0.65; }
 
+.action-form { margin: 16px 0; }
+.action-form .action { margin: 0; }
+
 .result {
     min-height: 250px;
     border: 1px dashed #b8c7d8;
@@ -233,6 +248,7 @@ textarea[readonly]:focus {
 }
 
 .empty { color: var(--muted); display: grid; place-items: center; text-align: center; }
+.global-error { min-height: 0; margin-bottom: 18px; }
 
 .answer {
     margin: 0 0 14px;

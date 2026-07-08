@@ -22,13 +22,13 @@ What makes it worth a look:
 
 ## Architecture
 
-Java 21, Spring Boot, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. Four POST endpoints; one service fanning out to Foundry and the pricing API.
+Java 21, Spring Boot, Thymeleaf, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. One public server-rendered page posts fixed demo actions back to Spring; the browser never receives model-call JSON endpoints.
 
 ```text
-Browser (static dashboard)
-   │  POST /api/instant · /api/cache-demo · /api/compact-demo · /api/caveman-demo
+Browser (server-rendered dashboard)
+    │  POST / with fixed demo action
    ▼
-@RestController ──▶ DemoRunService
+@Controller ──▶ cached fixed result ──▶ DemoRunService
    │ Azure AI Agents SDK        │ java.net.http + OData
    ▼                            ▼
 Foundry Responses API     Azure Retail Prices API

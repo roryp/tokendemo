@@ -229,7 +229,7 @@ To run the Spring Boot web dashboard locally:
 mvn spring-boot:run
 ```
 
-Open `http://localhost:8080` and use the buttons to price a live instant call (**Run instant model & price it**), warm the prompt cache (**Warm the cache**), compact working notes (**Compact prompt**), or compress an answer into caveman speak (**Answer normal & caveman**).
+Open `http://localhost:8080` and use the buttons to price a fixed instant call (**Run instant model & price it**), warm the prompt cache (**Warm the cache**), compact working notes (**Compact prompt**), or compress an answer into caveman speak (**Answer normal & caveman**). The dashboard is server-rendered with Thymeleaf: there are no public `/api/*` JSON endpoints and no browser JavaScript calls to the model. Fixed demo results are cached in the Spring app instance so repeated button clicks do not keep buying model calls.
 
 Use `mvn compile exec:java` after `mvn clean` or from a fresh clone. `mvn exec:java` by itself only works after classes already exist under `target/classes`.
 
@@ -243,7 +243,7 @@ mvn compile exec:java
 
 ## Prompt Cache Demo
 
-The default sample is intentionally small, so it usually has no cached input tokens. For demos, use the dedicated prompt-cache example. It sends the same long prompt twice with a stable `promptCacheKey`, then compares the warm-up call with the repeated call. This demo intentionally uses a much longer prompt than the default sample so the cache behavior is visible. In the web dashboard, the **Warm the cache** button shows this as a real-time animation: an animated cache gauge fills to the hit rate, the cold warm-up and warm repeated calls are compared side by side, and the panel lists exactly what was loaded into cache.
+The default sample is intentionally small, so it usually has no cached input tokens. For demos, use the dedicated prompt-cache example. It sends the same long prompt twice with a stable `promptCacheKey`, then compares the warm-up call with the repeated call. This demo intentionally uses a much longer prompt than the default sample so the cache behavior is visible. In the web dashboard, the **Warm the cache** button renders the cached server-side result: the cold warm-up and warm repeated calls are compared side by side, and the panel lists exactly what was loaded into cache.
 
 ```powershell
 mvn compile exec:java '-Dexec.mainClass=com.example.instantmodels.PromptCacheDemoApp'
@@ -408,7 +408,7 @@ An instant model and a Global Standard deployment of the same model bill at the 
 `-- src
     |-- main
     |   |-- java/com/example/instantmodels
-    |   |   |-- DemoController.java              # Web endpoints for the four demos
+    |   |   |-- DemoController.java              # Server-rendered dashboard controller
     |   |   |-- DemoRunService.java              # Shared demo + pricing logic
     |   |   |-- InstantModelsApp.java            # CLI entry point
     |   |   |-- InstantModelsConfig.java         # Env / .env configuration
@@ -420,7 +420,8 @@ An instant model and a Global Standard deployment of the same model bill at the 
     |   `-- resources
     |       |-- application.properties
     |       |-- simplelogger.properties
-    |       `-- static                           # Web dashboard: index.html, app.js, styles.css
+    |       |-- static                           # Dashboard CSS
+    |       `-- templates                        # Thymeleaf server-rendered dashboard
     `-- test/java/com/example/instantmodels
         |-- DemoRunServiceTest.java
         `-- InstantModelsConfigTest.java

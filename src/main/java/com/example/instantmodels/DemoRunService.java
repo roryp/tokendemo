@@ -65,6 +65,14 @@ class DemoRunService {
         this.telemetry = telemetry;
     }
 
+        static String defaultCompactPrompt() {
+                return DEFAULT_COMPACT_PROMPT;
+        }
+
+        static String defaultCavemanPrompt() {
+                return DEFAULT_CAVEMAN_PROMPT;
+        }
+
     InstantDemoResult runInstantDemo() {
         String prompt = InstantModelsConfig.prompt();
         Response response = execute("instant", new ResponseCreateParams.Builder()
