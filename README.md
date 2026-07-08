@@ -6,7 +6,7 @@
 
 **Live app:** [http://aka.ms/costs](http://aka.ms/costs)
 
-Call supported models by name—no deployment required—and see input, output, and cached tokens priced live against real Azure Retail Prices meters. The web dashboard offers four demos (the CLI covers the instant and prompt-cache flows):
+Call supported models by name—no deployment required—and see input, output, and cached tokens priced live against real Azure Retail Prices meters. The public web dashboard renders four fixed, read-only demo panels with no browser JavaScript, forms, buttons, or public model API endpoints. The CLI covers the executable instant and prompt-cache flows:
 
 - **Instant Demo** — prices a single live model-by-name call and compares instant vs. deployed rates.
 - **Prompt Cache Demo** — warms a long stable prefix, then shows the cold→warm token savings on a repeated call.
@@ -48,7 +48,7 @@ mvn spring-boot:run
 
 > Inside a dev container or GitHub Codespace, the browser sign-in flow is unavailable. Use `az login --use-device-code` instead.
 
-Open `http://localhost:8080` and run the four demos. For the full Azure provision-and-deploy path, jump to [Provision Azure Resources](#provision-azure-resources).
+Open `http://localhost:8080` to view the four fixed demo panels. For the full Azure provision-and-deploy path, jump to [Provision Azure Resources](#provision-azure-resources).
 
 ## Example Overview
 
@@ -58,29 +58,29 @@ Instant models are still quota-governed. During preview, they draw from a per-mo
 
 Sanitized validation finding: one West US 3 subscription checked during development reported a Tier 5 `gpt-chat-latest` Global Standard quota of `50,000` requests per minute and `5,000,000` tokens per minute, with no Global Standard deployment quota reserved at the time of the check. Treat this as a point-in-time example only; your subscription, quota tier, model, region, and reserved deployments can change the effective limit. Runtime response headers such as `x-ratelimit-limit-tokens`, `x-ratelimit-remaining-tokens`, and `retry-after-ms` are the best signal for live throttling behavior.
 
-This Java sample calls an instant model from a Foundry project endpoint, prints token usage, and estimates cost per call with live pricing from the Azure Retail Prices API. It follows the Microsoft Foundry Java quickstart pattern with `com.azure:azure-ai-agents:2.0.0`.
+This Java sample calls an instant model from a Foundry project endpoint, prints token usage, and estimates cost per call with live pricing from the Azure Retail Prices API. The public dashboard is a GET-only, server-rendered view of fixed cached results; custom prompts and live measurement runs stay in the CLI or direct Responses API path. It follows the Microsoft Foundry Java quickstart pattern with `com.azure:azure-ai-agents:2.0.0`.
 
 ## What It Does
 
-- Calls a Microsoft Foundry project endpoint with the Responses API.
+- Calls a Microsoft Foundry project endpoint with the Responses API from server-side Java code.
 - Uses an instant model by name, so no model deployment is required.
 - Loads local settings from `.env`, while keeping `.env` out of git.
 - Prints the model response plus input, output, total, and cached-input token usage.
 - Prices every instant call live, color-codes the three token types by price-intensity (cooler = cheaper per token, warmer = pricier), and projects the cost to 1,000 and 1M calls.
 - Shows token mix versus cost mix as two aligned bars, so the small but expensive output share is obvious at a glance.
 - Compares the instant (standard pay-as-you-go) per-call price against the same model's data-zone and priority-processing meters, all pulled live from the Azure Retail Prices API.
-- Visualizes prompt cache warming in real time, comparing a cold warm-up call with a warm repeated call and showing the cached prefix that was loaded.
+- Shows prompt cache warming with a fixed server-side result, comparing a cold warm-up call with a warm repeated call and showing the cached prefix that was loaded.
 - Compacts long working notes into a shorter reusable prompt and shows request-level token savings.
 - Answers a question twice—normal prose and terse "caveman" style—to show how much output-token spend drops when filler is cut while code, commands, and facts stay exact.
 - Looks up current prices at runtime from `https://prices.azure.com/api/retail/prices`.
 - Estimates per-call cost from the returned token usage and live retail pricing meters.
-- Streams every call's token usage (input, output, cached, total), estimated cost, and GenAI traces to Application Insights, and connects that resource to the Foundry project so the same numbers surface in the Foundry portal.
+- Streams every server-side model call's token usage (input, output, cached, total), estimated cost, and GenAI traces to Application Insights, and connects that resource to the Foundry project so the same numbers surface in the Foundry portal.
 
 ## Screenshots
 
 ![Token Efficiency dashboard](article-assets/instant-models-dashboard.png)
 
-The dashboard presents four token-efficiency workflows: a live-priced instant model call, real-time prompt cache warming, prompt compaction, and caveman-speak output compression. The hero above shows the first three; the caveman demo is captured below.
+The dashboard presents four fixed token-efficiency workflows: a live-priced instant model call, prompt cache warming, prompt compaction, and caveman-speak output compression. It renders server-side with no public forms, buttons, JavaScript, or `/api/*` model endpoints. The hero above shows the first three; the caveman demo is captured below.
 
 ![Instant model live pricing results](article-assets/instant-models-results.png)
 
@@ -88,7 +88,7 @@ The instant demo opens with a short explainer: an instant model is called by nam
 
 ![Prompt cache warming results](article-assets/prompt-cache-results.png)
 
-The prompt cache demo warms the model cache in real time. A cold warm-up call primes a long stable prefix, then a warm repeated call reuses it: the animated gauge fills to the cache-hit rate, the cold-versus-warm cards compare cost, and the panel shows exactly what was loaded into cache plus the savings per reuse.
+The prompt cache panel shows a fixed server-side warm/repeat run. A cold warm-up call primes a long stable prefix, then a warm repeated call reuses it: the cache-hit rate, cold-versus-warm cards, loaded prefix preview, and savings per reuse are rendered on the public page without exposing a callable cache endpoint.
 
 ![Compaction demo results](article-assets/compaction-results.png)
 
@@ -185,7 +185,7 @@ Each call emits:
 
 ### View the metrics in the Foundry portal
 
-1. Open the [Foundry portal](https://ai.azure.com/), select your project, and run a few demos in the web app first.
+1. Open the [Foundry portal](https://ai.azure.com/), select your project, and either load the web dashboard once or run the CLI demos first.
 2. Go to **Agents → Traces** to see each call as a GenAI span with its input, output, cached, and total token counts.
 3. Go to **Monitoring → Application analytics** for the token-consumption, latency, and cost dashboards.
 
@@ -229,7 +229,7 @@ To run the Spring Boot web dashboard locally:
 mvn spring-boot:run
 ```
 
-Open `http://localhost:8080` to view the fixed instant pricing, prompt cache, compaction, and caveman-speak demos. The dashboard is server-rendered with Thymeleaf: there are no public `/api/*` JSON endpoints, no browser JavaScript calls to the model, and no demo action buttons or public postback route. Fixed demo results are cached in the Spring app instance after the first render.
+Open `http://localhost:8080` to view the fixed instant pricing, prompt cache, compaction, and caveman-speak panels. The dashboard is server-rendered with Thymeleaf: there are no public `/api/*` JSON endpoints, no browser JavaScript calls to the model, and no demo action buttons, forms, or public postback route. Fixed demo results are cached in the Spring app instance after the first render.
 
 Use `mvn compile exec:java` after `mvn clean` or from a fresh clone. `mvn exec:java` by itself only works after classes already exist under `target/classes`.
 
@@ -408,7 +408,7 @@ An instant model and a Global Standard deployment of the same model bill at the 
 `-- src
     |-- main
     |   |-- java/com/example/instantmodels
-    |   |   |-- DemoController.java              # Server-rendered dashboard controller
+    |   |   |-- DemoController.java              # GET-only server-rendered dashboard controller
     |   |   |-- DemoRunService.java              # Shared demo + pricing logic
     |   |   |-- InstantModelsApp.java            # CLI entry point
     |   |   |-- InstantModelsConfig.java         # Env / .env configuration

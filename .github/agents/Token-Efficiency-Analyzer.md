@@ -19,6 +19,7 @@ Use these as the checklist. For the prompt or question you are given, judge each
 - **Prefer a direct completion** over chat or agent workflows for one-shot jobs. Agents only pay off when you need planning, tools, state, or multi-step behavior.
 - **Reuse stable context with prompt caching.** In the cache demo the warm-up pays for the full prompt and the repeat reuses the prefix. A verified run hit `9728` cached tokens (~`96%`), cutting cost from ~`USD 0.051` to ~`USD 0.007`.
 - **Watch output, not just input.** Short prompts can still get expensive with long answers, so the dashboard shows output tokens and cost separately.
+- **Avoid public model-call surfaces.** For public demos, keep model calls server-side, fixed, and cached. Do not expose browser-callable prompt endpoints or action forms unless abuse controls are in place.
 
 ## How To Respond
 

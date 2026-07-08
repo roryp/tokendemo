@@ -6,11 +6,11 @@ Live demo: [http://aka.ms/costs](http://aka.ms/costs) · Repo: [https://github.c
 
 ![Token Efficiency dashboard](instant-models-dashboard.png){ width=6.5in }
 
-*Four live workflows on one screen — a zero-deployment instant model call, a prompt-cache warm/repeat comparison, a compaction pass, and a caveman-speak output-compression pass. Every number is priced against live Azure Retail Prices meters, not a hardcoded table. (Figures shown are representative; live values vary by prompt, region, quota, and pricing response.)*
+*Four fixed workflows on one screen — a zero-deployment instant model call, a prompt-cache warm/repeat comparison, a compaction pass, and a caveman-speak output-compression pass. Every number is priced against live Azure Retail Prices meters, not a hardcoded table. (Figures shown are representative; live values vary by prompt, region, quota, and pricing response.)*
 
 ## Why this exists
 
-Most "AI cost" conversations happen after the bill arrives. This flips that: a Spring Boot dashboard backed by Microsoft Foundry **instant models** where, for every call, you see input tokens, output tokens, cached input tokens, the exact retail meter each one hits, and the cost — while you are still designing the feature.
+Most "AI cost" conversations happen after the bill arrives. This flips that: a locked-down Spring Boot dashboard backed by Microsoft Foundry **instant models** where, for fixed demo calls, you see input tokens, output tokens, cached input tokens, the exact retail meter each one hits, and the cost — while you are still designing the feature.
 
 What makes it worth a look:
 
@@ -22,13 +22,13 @@ What makes it worth a look:
 
 ## Architecture
 
-Java 21, Spring Boot, Thymeleaf, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. One public server-rendered page displays fixed cached demo results; the browser never receives model-call JSON endpoints or demo action forms.
+Java 21, Spring Boot, Thymeleaf, the Azure AI Agents SDK for the Responses API, and a small `java.net.http` client for pricing. One public GET-only server-rendered page displays fixed cached demo results; the browser never receives model-call JSON endpoints, JavaScript, buttons, or demo action forms.
 
 ```text
 Browser (server-rendered dashboard)
     │  GET /
    ▼
-@Controller ──▶ cached fixed result ──▶ DemoRunService
+@Controller ──▶ fixed cached result ──▶ DemoRunService
    │ Azure AI Agents SDK        │ java.net.http + OData
    ▼                            ▼
 Foundry Responses API     Azure Retail Prices API

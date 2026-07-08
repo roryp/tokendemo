@@ -1,11 +1,12 @@
 # Copilot Instructions
 
-This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant models. It demonstrates token usage, prompt caching, live Azure Retail Prices API lookup, OpenTelemetry-based token/cost telemetry, and Azure Container Apps deployment through azd.
+This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant models. It demonstrates token usage, prompt caching, live Azure Retail Prices API lookup, OpenTelemetry-based token/cost telemetry, and Azure Container Apps deployment through azd. The public web dashboard is GET-only, server-rendered with Thymeleaf, and intentionally exposes no public model-call APIs or action forms.
 
 ## Project Priorities
 
 - Keep token efficiency central. Prefer small, scoped prompts and direct Responses API calls unless an agent/tool workflow is explicitly needed.
-- Preserve the demo's cost transparency: input tokens, output tokens, cached input tokens, retail meters, and estimated cost should stay visible in CLI and web flows.
+- Preserve the demo's cost transparency: input tokens, output tokens, cached input tokens, retail meters, and estimated cost should stay visible in CLI output and the server-rendered web dashboard.
+- Keep the public dashboard locked down. Do not reintroduce `/api/*` demo endpoints, browser JavaScript model calls, action forms, buttons, or public postback routes without explicit approval and abuse controls.
 - Treat `.env` and `.azure/` as local-only. Never commit real Foundry endpoints, API keys, access tokens, or generated azd environment files.
 - Prefer Microsoft Entra authentication through `DefaultAzureCredential`. Do not add API-key auth paths unless explicitly requested.
 
@@ -14,6 +15,7 @@ This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant 
 - Java target is 21.
 - Maven is the build system.
 - Spring Boot web dashboard entry point is `com.example.instantmodels.InstantModelsWebApplication`.
+- Web dashboard route is `GET /` only through `DemoController`; it renders fixed cached demo results with Thymeleaf.
 - CLI entry points are:
   - `com.example.instantmodels.InstantModelsApp`
   - `com.example.instantmodels.PromptCacheDemoApp`
@@ -53,6 +55,7 @@ This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant 
 
 - The dashboard is a compact operational tool, not a marketing page.
 - Keep the UI colorful but information-dense and readable.
+- Keep the public UI non-interactive: no demo buttons/forms, no browser-side `fetch`, and no static `app.js` model-call flow.
 - Preserve all four flows:
   - Instant demo for a small prompt.
   - Prompt cache demo for a long repeated prefix.
@@ -67,5 +70,6 @@ Before considering changes complete:
 - Run `mvn test`.
 - Run Bicep validation if infra changed.
 - For UI changes, run locally and verify in browser/Playwright when possible.
+- For dashboard security changes, verify zero scripts/forms/buttons/API targets in the DOM; `GET /` is 200; `POST /` is 405; former `/api/*` routes and `/app.js` are 404.
 - For deployment changes, verify `azd up` or `azd deploy web` rather than manual `az acr build` / `az containerapp update` commands.
 - Run a commit-candidate secret scan when touching config, README, or deployment files.

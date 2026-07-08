@@ -1,11 +1,12 @@
 @startuml prompt-cache-demo
 title Prompt Caching: Init then Reuse (high level)
 
-actor Developer as dev
+actor Viewer as viewer
 participant "Your App" as app
 participant "Instant Model" as model
 
-dev -> app : Run cache demo
+viewer -> app : Open dashboard
+app -> app : Use cached fixed result
 
 == Cache init (first call) ==
 app -> app : Build one large stable prompt\n+ a cache key
@@ -24,6 +25,6 @@ note right of model
 end note
 model --> app : Answer\n(stable prefix billed as cheaper cached input)
 
-app --> dev : Show token usage + savings
+app --> viewer : Render token usage + savings
 
 @enduml
