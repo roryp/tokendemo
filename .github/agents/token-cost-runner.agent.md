@@ -22,7 +22,8 @@ You are the live token-cost runner for the Instant Models sample. You execute th
    - Instant: `mvn compile exec:java`
    - Prompt cache (warm-up vs repeat, cached tokens): `mvn compile exec:java '-Dexec.mainClass=com.example.instantmodels.PromptCacheDemoApp'`
    - Deployed container app: POST `"$(azd env get-value AZURE_CONTAINER_APP_URL)/api/compact-demo"` or `/api/caveman-demo` with body `{"prompt":"..."}`.
-   - Raw Responses API (tokens only, no dollars): bearer token from `az account get-access-token --resource https://cognitiveservices.azure.com`, endpoint from `azd env get-value AZURE_OPENAI_ENDPOINT`, POST `/openai/v1/responses`, read `usage.input_tokens` / `usage.output_tokens`.
+   - Raw Responses API (fine-grained control): bearer token from `az account get-access-token --resource https://cognitiveservices.azure.com`, endpoint from `azd env get-value AZURE_OPENAI_ENDPOINT`, POST `/openai/v1/responses`, read `usage.input_tokens`, `usage.output_tokens`, and cached input from `usage.input_tokens_details.cached_tokens`.
+   - Cache-miss variant (show a content-driven miss): put a fresh nonce in the prompt so call 1 is genuinely cold, then send the long prompt twice under one `prompt_cache_key` (cold -> warm hit); then send a THIRD call under the SAME key that changes the prompt content early (e.g., the reference section text). The changed call reports `cached_tokens=0` because the cache matches the actual token prefix, not the key.
 3. Parse each run's `Usage:` / `Cache details:` / `Estimated cost:` lines (or the JSON `usage` block). For the prompt-cache flow, capture BOTH the warm-up call (`cached=0`) and the repeated call (cached tokens + hit rate) so the cache benefit is visible.
 4. Report only what the runs returned.
 
@@ -31,6 +32,7 @@ You are the live token-cost runner for the Instant Models sample. You execute th
 - The deployed container app hard-caps output (caveman ~600, compaction ~360 tokens); long answers truncate and savings can read `0`. For a true delta, call the model directly with a generous `max_output_tokens` (2000+).
 - `gpt-chat-latest` maps to the `5.5 ShortCo` retail meter (Global: input $5 / cached $0.50 / output $30 per 1M). Cost comes from live Retail Prices at run time, not a hardcoded table.
 - Compaction only shrinks long, redundant notes; on a short prompt it can grow. Caveman compresses the answer/output, not the input.
+- `prompt_cache_key` is only a ROUTING hint, not a cache handle: a hit requires an identical token prefix. Changing content early (e.g., the section text) misses even under the same key; changing only the tail keeps the shared prefix cached. A fresh key OR any early content change forces a cold, full-price call. Verified live: same key + reworded sections -> `cached=0`, cost jumped ~7.7x (`$0.0069` hit -> `$0.0536` miss). The `PromptCacheDemoApp` puts its per-run UUID early in the prompt, so runs never share cache and each warm-up is cold by design.
 
 ## Output Format
 
