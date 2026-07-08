@@ -1,7 +1,7 @@
 ---
 name: Token Efficiency Analyzer
 description: "Take a user's prompt or token-efficiency question and return concise, prioritized efficiency guidelines for Microsoft Foundry instant models: smallest model, tight prompts, dropped tools, caching, compaction, and output length."
-tools: [read/readFile]
+tools: [read]
 argument-hint: "Paste a prompt or ask a token-efficiency question to get guidelines back."
 ---
 
