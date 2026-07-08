@@ -1,6 +1,6 @@
 # Copilot Instructions
 
-This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant models. It demonstrates token usage, prompt caching, live Azure Retail Prices API lookup, and Azure Container Apps deployment through azd.
+This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant models. It demonstrates token usage, prompt caching, live Azure Retail Prices API lookup, OpenTelemetry-based token/cost telemetry, and Azure Container Apps deployment through azd.
 
 ## Project Priorities
 
@@ -26,10 +26,11 @@ This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant 
 
 - Keep `azure.yaml` as a standard azd Container Apps service using local Docker build. Do not reintroduce ACR remote build.
 - The Container App is discovered by azd via the `azd-service-name: web` tag in Bicep.
-- Bicep provisions Foundry, ACR, Container Apps, Log Analytics, and managed identity/RBAC.
+- Bicep provisions Foundry, ACR, Container Apps, Log Analytics, Application Insights, and managed identity/RBAC.
 - The Container App managed identity needs:
   - AcrPull on the container registry.
   - Azure AI User on the Foundry project.
+- Keep the Container App's `configuration.registries` (ACR login server + managed identity) in Bicep. azd injects it on first deploy, but re-running `azd up` re-applies Bicep and wipes it; without it, image pulls fail with `UNAUTHORIZED`.
 - If changing infrastructure, validate with:
   - `az bicep build --file infra/main.bicep --stdout`
 
@@ -39,6 +40,14 @@ This repository is a Java 21 / Spring Boot sample for Microsoft Foundry instant 
 - `gpt-chat-latest` and the tested `gpt-5.5` path currently resolve to `5.5 ShortCo` pricing in this app.
 - Do not hardcode one-off prices without also keeping runtime pricing lookup intact.
 - If model aliases change, prefer making meter-prefix mapping configurable rather than baking assumptions into UI text.
+
+## Observability
+
+- The app emits OpenTelemetry GenAI spans and token/cost metrics from `TokenTelemetry` on every model call. Keep token and cost attributes visible on these signals.
+- Use the OpenTelemetry API only (`io.opentelemetry:opentelemetry-api`, no explicit version so Spring Boot manages it). Do not add the OpenTelemetry SDK; export is the agent's job.
+- The Application Insights Java agent is the export pipeline. Pin it via the `maven-dependency-plugin` `copy` goal (not a `<dependency>`) and attach it with `-javaagent` in the Dockerfile.
+- The agent reads `APPLICATIONINSIGHTS_CONNECTION_STRING` and no-ops when unset, so local runs and tests stay agent-free. Do not require telemetry config for local builds.
+- Bicep provisions a workspace-based Application Insights resource and an `AppInsights` connection on the Foundry project. Do not output the connection string from Bicep.
 
 ## Frontend Guidance
 
